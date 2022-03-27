@@ -210,16 +210,40 @@ phyloseq::ntaxa(ps)
 phyloseq::ntaxa(ps_post)
 
 
+###### mocks removed #####
+
+
+
+
+ps_post <- ps_post %>% prune_samples(samples = ps_post@sam_data$sample_type != 'mock') %>%
+  rarefy_even_depth(rngseed = 7)
 
 
 
 
 
+otu_mat_post <- otu_table(ps_post) %>% as(., Class='matrix')
+sam_dat_post <- sample_data(ps_post) %>% as(., Class = 'data.frame')
 
 
+NMDSpost <- NMDS_ellipse(sam_dat_post, otu_mat_post, grouping_set = 'sample_type', MDS_trymax = 200)
 
 
+NMDSpost[[1]] %>%
+  ggplot(aes(x=MDS1, y=MDS2)) +
+  geom_point(aes(fill=sample_type, size=Read_depth), color='white', shape=21)
 
+
+### THIS ONE
+NMDSpost[[1]] %>%
+  ggplot(aes(x=MDS1, y=MDS2)) +
+  geom_point(aes(fill=Vaccine), color='white', shape=21, size=3)
+
+
+NMDSpost[[1]] %>%
+  ggplot(aes(x=MDS1, y=MDS2)) +
+  geom_point(aes(fill=Challenge), color='white', shape=21, size=3) +
+  facet_wrap(~day_post_challenge)
 
 
 #

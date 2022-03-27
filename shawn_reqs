@@ -1,0 +1,117 @@
+16S rRNA microbiome sequence comparisons of Salmonella vaccines against serovars Reading and Infantis
+
+A. Vaccination effects on turkey microbiome
+Samples: Post-vaccination/booster vaccination (oral), prior to Salmonella challenge
+Question: did the vaccines alter the microbial composition of the turkey cecum (cecal contents)
+
+Comparison #1:
+12 mock vaccinated turkeys:    MM_D-1 #1-4 and Mreading_D-1 #1-8
+VERSUS
+12 BBS 866 vaccinated turkeys:    BBS866_OO_D-1 #1-12
+
+Comparison #2:
+12 mock vaccinated turkeys:     MM_D-1 #1-4 and Mreading_D-1 #1-8
+VERSUS
+10 Avipro vaccinated turkeys:    Avipro_OO_D-1 #1-10
+
+JT comp3 mocks vs all vacc lumped
+
+B. Infantis Challenge effect on turkey microbiome
+Samples: Mock-vaccinated/mock-challenged and mock-vaccinated/Infantis-challenged @ 10dpi
+Question: did challenge with Salmonella Infantis alter the microbial composition of the turkey cecum (cecal contents)
+
+12 Mock-vaccinated/mock-challenged turkeys (necropsy: 11/02/21):    MM_D14 #1-12
+VERSUS
+13 mock-vaccinated/Infantis-challenged turkeys at 10dpi (necropsy: 11/01/21):    Minfantis_D10 #1-13
+
+C. BBS 866 vaccination effect on Infantis-challenged turkey microbiome
+Samples: Mock-vaccinated/Infantis-challenged and BBS866-vaccinated/Infantis-challenged
+Question: Did BBS 866 vaccination modify the Infantis-induced alterations of the microbial composition of the turkey cecum (cecal contents)
+
+13 mock-vaccinated/Infantis-challenged turkeys at 10dpi:    Minfantis_D10 #1-13
+VERSUS
+14 BBS866-vaccinated/Infantis-challenged turkeys at 10dpi:    BBS866_OO_D10 #1-14
+
+D. AviPro vaccination effect on Infantis-challenged turkey microbiome
+Samples: Mock-vaccinated/Infantis-challenged and AviPro-vaccinated/Infantis-challenged
+Question: Did AviPro vaccination modify the Infantis-induced alterations of the microbial composition of the turkey cecum (cecal contents)
+
+13 mock-vaccinated/Infantis-challenged turkeys at 10dpi:    Minfantis_D10 #1-13
+VERSUS
+14 -AviPro-vaccinated/Infantis-challenged turkeys at 10dpi:    Avipro_OO_D10 #1-14
+
+E. Reading Challenge effect on turkey microbiome
+Samples: Mock-vaccinated/mock-challenged and mock-vaccinated/Reading-challenged @ 2,7, 14, 21 dpi
+Question: did challenge with Salmonella Reading alter the microbial composition of the turkey cecum (cecal contents)
+
+Comparison #1 @ 2dpi:
+12 Mock-vaccinated/mock-challenged turkeys:        MM_D2 #1-12
+VERSUS
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D2 #1-12
+
+Comparison #2 @ 7dpi:
+12 Mock-vaccinated/mock-challenged turkeys:        MM_D7 #1-12
+VERSUS
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D7 #1-12
+
+Comparison #3 @ 14dpi:
+12 Mock-vaccinated/mock-challenged turkeys:        MM_D14 #1-12
+VERSUS
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D14 #1-12
+
+Comparison #4 @ 21dpi:
+16 Mock-vaccinated/mock-challenged turkeys:        MM_D21 #1-16
+VERSUS
+16 mock-vaccinated/Reading-challenged turkeys:    Mreading_D21 #1-16
+
+F. BBS 866 vaccination effect on Reading-challenged turkey microbiome
+Samples: Mock-vaccinated/Reading-challenged and BBS866-vaccinated/Reading-challenged
+Question: Did BBS 866 vaccination modify the Reading-induced alterations of the microbial composition of the turkey cecum (cecal contents)
+
+Comparison #1 @ 2dpi:
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D2 #1-12
+VERSUS
+12 BBS866-vaccinated/Reading-challenged turkeys:    BBS866_OO_D2 #1-12
+
+Comparison #2 @ 7dpi:
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D7 #1-12
+VERSUS
+12 BBS866-vaccinated/Reading-challenged turkeys:    BBS866_OO_D7 #1-12
+
+Comparison #3 @ 14dpi:
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D14 #1-12
+VERSUS
+12 BBS866-vaccinated/Reading-challenged turkeys:    BBS866_OO_D14 #1-12
+
+Comparison #4 @ 21dpi:
+16 mock-vaccinated/Reading-challenged turkeys:    Mreading_D21 #1-16
+VERSUS
+16 BBS866-vaccinated/Reading-challenged turkeys:    BBS866_OO_D21 #1-16
+
+G. AviPro vaccination effect on Reading-challenged turkey microbiome
+Samples: Mock-vaccinated/Reading-challenged and AviPro-vaccinated/Reading-challenged
+Question: Did AviPro vaccination modify the Reading-induced alterations of the microbial composition of the turkey cecum (cecal contents)
+
+Comparison #1 @ 2dpi:
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D2 #1-12
+VERSUS
+12 AviPro -vaccinated/Reading-challenged turkeys:    Avipro_OO_D2 #1-12
+
+Comparison #2 @ 7dpi:
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D7 #1-12
+VERSUS
+12 AviPro -vaccinated/Reading-challenged turkeys:    Avipro_OO_D7 #1-12
+
+Comparison #3 @ 14dpi:
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D14 #1-12
+VERSUS
+12 AviPro -vaccinated/Reading-challenged turkeys:    Avipro_OO_D14 #1-12
+
+Comparison #4 @ 21dpi:
+16 mock-vaccinated/Reading-challenged turkeys:    Mreading_D21 #1-16
+VERSUS
+13 AviPro -vaccinated/Reading-challenged turkeys:    Avipro_OO_D21 #1-13
+
+***I don’t plan to necessarily compare the vaccines to one another, but instead create 2 manuscripts (if all the data allow). Although, it might be interesting to know, if both vaccines alter the microbiota, do they do it similarly; i.e.:
+1. Compare in A: comparison #1 & #2
+2. Compare F to G on the corresponding dpi
