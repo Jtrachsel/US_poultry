@@ -12,6 +12,8 @@ track <- read_tsv('./processed_data/QC_stats_reads_per_sample.tsv') %>%
 sort(track$nonchim)
 track$sample_type
 
+### THIS ONE ###
+
 track %>%
   ggplot(aes(nonchim,fill=sample_type)) +
   geom_histogram(color='black', bins = 50) +
@@ -176,11 +178,13 @@ ps <- read_rds('./processed_data/phyloseq_object.rds')
 otu_mat_pre <- otu_table(ps) %>% as(., Class='matrix')
 sam_dat_pre <- sample_data(ps) %>% as(., Class = 'data.frame')
 
+library(funfuns)
 
-NMDSpre <- NMDS_ellipse(sam_dat, otu_mat, grouping_set = 'sample_type')
+NMDSpre <- NMDS_ellipse(sam_dat_pre, otu_mat_pre, grouping_set = 'sample_type')
 
 # plot(NMDS[[3]])
 
+# THIS ONE LOW READ SAMPLES MORE SIMILAR TO NTCS
 NMDSpre[[1]] %>%
   ggplot(aes(x=MDS1, y=MDS2)) +
   geom_point(aes(fill=sample_type, size=Read_depth), color='white', shape=21)
