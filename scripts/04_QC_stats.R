@@ -14,45 +14,50 @@ track$sample_type
 
 ### THIS ONE ###
 
-track %>%
+P_reads_histogram <-
+  track %>%
   ggplot(aes(nonchim,fill=sample_type)) +
   geom_histogram(color='black', bins = 50) +
   ylab('number of samples') +
   xlab('number of reads passing QC') +
   xlim(0,150000) +
   theme_bw()
-
+P_reads_histogram
 # track %>% filter(nonchim)
 
 
-tax <- read_tsv('./processed_data/ASV_taxonomy.tsv')
+# tax <- read_tsv('./processed_data/ASV_taxonomy.tsv')
 
-ASV_counts <- read_tsv('processed_data/ASV_counts.tsv')
+# ASV_counts <- read_tsv('processed_data/ASV_counts.tsv')
 
-ps <- readRDS('./processed_data/phyloseq_decontam.rds')
+# ps <- readRDS('./processed_data/phyloseq_decontam.rds')
 
-ASV_long <- psmelt(ps)
+# ASV_long <-
+#   ps %>%
+#   # rarefy_even_depth() %>%
+#   # transform_sample_counts(fun = function(x) x / sum(x)) %>%
+#   psmelt()
 
-ASV_long2 <-
-  ASV_counts %>%
-  pivot_longer(cols = -sample_ID,names_to = 'ASV_seq', values_to = 'count') %>%
-  left_join(tax) %>%
-  mutate(sample_type=case_when(
-    grepl('mock', sample_ID) ~ 'mock',
-    grepl('neg', sample_ID)  ~ 'neg',
-    TRUE                     ~ 'exp'
-  ))  %>%
-  group_by(sample_ID) %>%
-  mutate(percent_abund=count/sum(count)*100) %>%
-  ungroup()
+# ASV_long2 <-
+#   ASV_counts %>%
+#   pivot_longer(cols = -sample_ID,names_to = 'ASV_seq', values_to = 'count') %>%
+#   left_join(tax) %>%
+#   mutate(sample_type=case_when(
+#     grepl('mock', sample_ID) ~ 'mock',
+#     grepl('neg', sample_ID)  ~ 'neg',
+#     TRUE                     ~ 'exp'
+#   ))  %>%
+#   group_by(sample_ID) %>%
+#   mutate(percent_abund=count/sum(count)*100) %>%
+#   ungroup()
 
 # mean_proportion_per_sample
 # for each ASV within each sample:
   # calculate what proportion of the sampletotal that ASV occupies
   # ASV_count / sample_total_count
-ASV_long2 %>%
-  filter(percent_abund > 1) %>%
-  ggplot(aes(x=sample_type, y=percent_abund)) + geom_point()
+# ASV_long2 %>%
+#   filter(percent_abund > 1) %>%
+#   ggplot(aes(x=sample_type, y=percent_abund)) + geom_point()
 
 
 
@@ -82,6 +87,15 @@ ASV_long2 %>%
 # one for the asvs that occur in each sample type
 # ASV_long
 # ASV_long %>% arrange((count))
+ASV_long$Abundance
+# ASV_long %>%
+#   filter(Abundance>0) %>%
+#   group_by(sample_ID, Challenge) %>%
+#   summarise(num_ASVs=n()) %>%
+#   ggplot(aes(x=Challenge, y=num_ASVs)) + geom_boxplot() +
+#   # scale_y_log10() +
+#   geom_jitter()
+
 
 ASV_long %>%
   filter(Abundance>0) %>%
@@ -93,86 +107,90 @@ ASV_long %>%
 
 
 
-mock_ASVs <- ASV_long %>% filter(sample_type == 'mock' & Abundance > 0) %>% pull(OTU) %>% unique()
-neg_ASVs <- ASV_long %>% filter(sample_type == 'neg' & Abundance > 0) %>% pull(OTU) %>% unique()
-exp_ASVs <- ASV_long %>% filter(sample_type == 'exp' & Abundance > 0) %>% pull(OTU) %>% unique()
+#
+# mock_ASVs <- ASV_long %>% filter(sample_type == 'mock' & Abundance > 0) %>% pull(OTU) %>% unique()
+# neg_ASVs <- ASV_long %>% filter(sample_type == 'neg' & Abundance > 0) %>% pull(OTU) %>% unique()
+# exp_ASVs <- ASV_long %>% filter(sample_type == 'exp' & Abundance > 0) %>% pull(OTU) %>% unique()
 
 
-
-ALL_ASV_summary %>%
-  filter(ASV_seq  %in% neg_ASVs) %>%
-  filter(tot_count > 0) %>%
-  filter(num_samples >1) %>%
-  ggplot(aes(x=ASV_rank, y=(med_abund))) +
-  geom_point(aes(color=sample_type))
-
-
-
+#
+# ALL_ASV_summary %>%
+#   filter(ASV_seq  %in% neg_ASVs) %>%
+#   filter(tot_count > 0) %>%
+#   filter(num_samples >1) %>%
+#   ggplot(aes(x=ASV_rank, y=(med_abund))) +
+#   geom_point(aes(color=sample_type))
+#
+#
+#
 
 
 
 # problems
-
-MOCK_ASV_summary <-
-  ASV_long %>%
-  filter(OTU %in% mock_ASVs) %>%
-  group_by(OTU,sample_type) %>%
-  summarise(tot_count=sum(Abundance),
-            num_samples=sum(Abundance > 0),
-            av_abund=mean(percent_abund),
-            med_abund = median(percent_abund))# %>%
-# arrange(desc(tot_count))
-
-
+#
+# MOCK_ASV_summary <-
+#   ASV_long %>%
+#   filter(OTU %in% mock_ASVs) %>%
+#   group_by(OTU,sample_type) %>%
+#   summarise(tot_count=sum(Abundance),
+#             num_samples=sum(Abundance > 0),
+#             av_abund=mean(percent_abund),
+#             med_abund = median(percent_abund))# %>%
+# # arrange(desc(tot_count))
 
 
+
+# PRINT THIS SUMMARY
 unclass_ASV_summary <-
   ASV_long %>%
   filter(is.na(domain)) %>%
   filter(Abundance != 0) %>%
-  group_by(OTU) %>%
+  group_by(OTU, ASV_seq) %>%
   summarise(tot_counts=sum(Abundance),
             num_samples=n(),
             av_per_sample=mean(Abundance),
             med_per_sample=median(Abundance)) %>%
   arrange(desc(num_samples))
 
-unclass_ASV_summary %>% slice_head() %>% pull(ASV_seq)
 
-bad_unclassified_ASVs <- unclass_ASV_summary %>% filter(num_samples < 20) %>% pull(OTU)
+unclass_ASV_summary %>% pull(ASV_seq)
+
+# unclass_ASV_summary %>% slice_head() %>% pull(ASV)
+
+# bad_unclassified_ASVs <- unclass_ASV_summary %>% filter(num_samples < 20) %>% pull(OTU)
 
 
-ps <- prune_taxa(!(taxa_names(ps) %in% bad_unclassified_ASVs), x = ps)
+# ps <- prune_taxa(!(taxa_names(ps) %in% bad_unclassified_ASVs), x = ps)
 ########
 
 
-
-mock_melt <-
-  ps_clean %>%
-  prune_samples(x = ., samples = sample_data(.)$sample_type == 'mock') %>%
-  prune_taxa(x=., taxa = taxa_sums(.) > 0) %>%
-  transform_sample_counts(function(x){x/sum(x)}) %>%
-  psmelt()
-
-
-
-mock_melt %>% ggplot(aes(x=Sample, y=(Abundance))) + geom_col(aes(fill=phylum), color='black')
+#
+# mock_melt <-
+#   ps_clean %>%
+#   prune_samples(x = ., samples = sample_data(.)$sample_type == 'mock') %>%
+#   prune_taxa(x=., taxa = taxa_sums(.) > 0) %>%
+#   transform_sample_counts(function(x){x/sum(x)}) %>%
+#   psmelt()
 
 
-mock_seqs <-
-  mock_melt %>%
-  group_by(OTU, phylum, class, order, family, genus) %>%
-  summarise(tot_abund=sum(Abundance)) %>%
-  arrange(desc(tot_abund)) %>%
-  pull(OTU)
+#
+# mock_melt %>% ggplot(aes(x=Sample, y=(Abundance))) + geom_col(aes(fill=phylum), color='black')
+#
+
+# mock_seqs <-
+#   mock_melt %>%
+#   group_by(OTU, phylum, class, order, family, genus) %>%
+#   summarise(tot_abund=sum(Abundance)) %>%
+#   arrange(desc(tot_abund)) %>%
+#   pull(OTU)
 
 
-mock_seqs[2]
+# mock_seqs[2]
 
 ########### pre-post decontam compare
 
 
-ps <- read_rds('./processed_data/phyloseq_object.rds')
+ps <- read_rds('./processed_data/phyloseq_raw.rds')
 
 
 otu_mat_pre <- otu_table(ps) %>% as(., Class='matrix')
@@ -180,7 +198,7 @@ sam_dat_pre <- sample_data(ps) %>% as(., Class = 'data.frame')
 
 library(funfuns)
 
-NMDSpre <- NMDS_ellipse(sam_dat_pre, otu_mat_pre, grouping_set = 'sample_type')
+NMDSpre <- NMDS_ellipse(sam_dat_pre, otu_mat_pre, grouping_set = 'sample_type', MDS_trymax = 50)
 
 # plot(NMDS[[3]])
 
@@ -198,7 +216,7 @@ otu_mat_post <- otu_table(ps_post) %>% as(., Class='matrix')
 sam_dat_post <- sample_data(ps_post) %>% as(., Class = 'data.frame')
 
 
-NMDSpost <- NMDS_ellipse(sam_dat_post, otu_mat_post, grouping_set = 'sample_type')
+NMDSpost <- NMDS_ellipse(sam_dat_post, otu_mat_post, grouping_set = 'sample_type', MDS_trymax = 50)
 
 
 NMDSpost[[1]] %>%
@@ -209,7 +227,7 @@ NMDSpost[[1]] %>%
 phyloseq::ntaxa(ps)
 phyloseq::ntaxa(ps_post)
 
-
+min(sample_sums(ps_post))
 ###### mocks removed #####
 
 
@@ -228,22 +246,23 @@ sam_dat_post <- sample_data(ps_post) %>% as(., Class = 'data.frame')
 
 NMDSpost <- NMDS_ellipse(sam_dat_post, otu_mat_post, grouping_set = 'sample_type', MDS_trymax = 200)
 
-
-NMDSpost[[1]] %>%
-  ggplot(aes(x=MDS1, y=MDS2)) +
-  geom_point(aes(fill=sample_type, size=Read_depth), color='white', shape=21)
-
-
 ### THIS ONE
 NMDSpost[[1]] %>%
   ggplot(aes(x=MDS1, y=MDS2)) +
-  geom_point(aes(fill=Vaccine), color='white', shape=21, size=3)
+  geom_point(aes(fill=sample_type, size=Read_depth), color='white', shape=21) +
+  theme_bw()
 
 
-NMDSpost[[1]] %>%
-  ggplot(aes(x=MDS1, y=MDS2)) +
-  geom_point(aes(fill=Challenge), color='white', shape=21, size=3) +
-  facet_wrap(~day_post_challenge)
+
+# NMDSpost[[1]] %>%
+#   ggplot(aes(x=MDS1, y=MDS2)) +
+#   geom_point(aes(fill=Vaccine), color='white', shape=21, size=3)
+
+#
+# NMDSpost[[1]] %>%
+#   ggplot(aes(x=MDS1, y=MDS2)) +
+#   geom_point(aes(fill=Challenge), color='white', shape=21, size=3) +
+#   facet_wrap(~day_post_challenge)
 
 
 #

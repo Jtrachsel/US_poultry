@@ -3,15 +3,63 @@ library(phyloseq)
 
 
 
-tax <- read_tsv('./processed_data/ASV_taxonomy.tsv') %>%
-  column_to_rownames(var='ASV_seq') %>%
+tax <-
+  read_tsv('./processed_data/ASV_taxonomy.tsv') %>%
+  mutate(ASV=paste0('ASV_', seq_along(ASV_seq)))
+
+
+fix_domain <- function(tax){
+
+  tax %>%
+    mutate(domain = case_when(
+      is.na(domain) ~ 'unclassified',
+      TRUE ~ domain))
+
+}
+
+
+fix_level <- function(tax, level){
+  # browser()
+  position <- which(colnames(tax) == level)
+
+  tax[[level]] <- ifelse(is.na(tax[[level]]), paste0(tax[[position-1]], '_unclassified'),tax[[level]])
+  tax[[level]] <- sub('unclassified_unclassified', 'unclassified',  tax[[level]])
+  return(tax)
+}
+
+
+tax <-
+  tax %>%
+  fix_domain() %>%
+  fix_level( 'phylum') %>%
+  fix_level('class') %>%
+  fix_level('order') %>%
+  fix_level('family') %>%
+  fix_level('genus') %>%
+  fix_level('species')
+
+
+
+
+
+
+swip_swapper <- tax$ASV
+names(swip_swapper) <- tax$ASV_seq
+
+tax <-
+  tax %>%
+  column_to_rownames(var='ASV') %>%
   as.matrix()
+
+rownames(tax)
 
 ASV_counts <- read_tsv('processed_data/ASV_counts.tsv') %>%
   mutate(sample_ID=gsub('-','_', sample_ID)) %>%
   filter(sample_ID != 'Undetermined') %>%
   column_to_rownames(var = 'sample_ID') %>%
   as.matrix()
+
+colnames(ASV_counts) <- swip_swapper[colnames(ASV_counts)]
 
 
 samdat <-

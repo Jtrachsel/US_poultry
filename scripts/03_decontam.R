@@ -1,8 +1,28 @@
+library(tidyverse)
 library(decontam)
 library(funfuns)
+library(phyloseq)
+
+ps <- read_rds('./processed_data/phyloseq_raw.rds')
 
 
-ps <- read_rds('./processed_data/phyloseq_object.rds')
+
+otu_mat_pre <- otu_table(ps) %>% as(., Class='matrix')
+sam_dat_pre <- sample_data(ps) %>% as(., Class = 'data.frame')
+
+library(funfuns)
+
+NMDSpre <- NMDS_ellipse(sam_dat_pre, otu_mat_pre, grouping_set = 'sample_type', MDS_trymax = 100)
+
+# plot(NMDS[[3]])
+
+# THIS ONE LOW READ SAMPLES MORE SIMILAR TO NTCS
+NMDSpre[[1]] %>%
+  ggplot(aes(x=MDS1, y=MDS2)) +
+  geom_point(aes(fill=sample_type, size=Read_depth), color='white', shape=21) +
+  theme_bw()
+
+
 
 # these 4 samples are evident in the nmds with the mocks and negs
 # they have the lowest number of reads, so makes sense that they would be most contaminated
@@ -43,25 +63,28 @@ ggplot(data=df.pa, aes(x=pa.neg, y=pa.pos, color=contaminant)) + geom_point() +
   xlab("Prevalence (Negative Controls)") + ylab("Prevalence (True Samples)")
 
 good_ASVs <-
-  contamdf.prev05 %>%
+  contamdf.prev %>%
   filter(!contaminant) %>%
-  rownames_to_column(var='ASV_seq') %>%
-  pull(ASV_seq)
+  rownames_to_column(var='ASV') %>%
+  pull(ASV)
 
 
 
 
 
 ### look for closest negatives for each sample
-vegdist(otu_mat_pre) %>%
-  as.matrix() %>%
-  as.data.frame() %>%
-  rownames_to_column(var='from') %>%
-  pivot_longer(cols=-from, names_to = 'to', values_to = 'bray') %>%
-  filter(grepl('neg',from)) %>%
-  group_by(to) %>%
-  summarise(best_neg=from[which.min(bray)],
-            bray=bray[which.min(bray)]) %>% arrange(bray)
+# vegdist(otu_mat_pre) %>%
+#   as.matrix() %>%
+#   as.data.frame() %>%
+#   rownames_to_column(var='from') %>%
+#   pivot_longer(cols=-from, names_to = 'to', values_to = 'bray') %>%
+#   filter(grepl('neg',from)) %>%
+#   group_by(to) %>%
+#   summarise(best_neg=from[which.min(bray)],
+#             bray=bray[which.min(bray)]) %>% arrange(bray)
+#
+
+
 
 
 
@@ -69,9 +92,55 @@ ps_clean <-
   prune_taxa(x = ps, taxa = (taxa_names(ps) %in% good_ASVs)) %>%
   prune_samples(x=., samples = !(sample_names(.) %in% bad_samples)) %>%
   prune_samples(x=., samples = sample_data(.)$sample_type != 'neg') %>%
+  prune_samples(x=., samples = sample_data(.)$sample_type != 'mock') %>%
   prune_taxa(x=., taxa = taxa_sums(.) > 1)
 
 
 sample_sums(ps_clean) %>% sort()
 
+
+
+ASV_long <-
+  ps %>%
+  # rarefy_even_depth() %>%
+  # transform_sample_counts(fun = function(x) x / sum(x)) %>%
+  psmelt()
+
+ASV_long %>%
+  filter(Abundance>0) %>%
+  group_by(sample_ID, Challenge) %>%
+  summarise(num_ASVs=n()) %>%
+  ggplot(aes(x=Challenge, y=num_ASVs)) + geom_boxplot() +
+  # scale_y_log10() +
+  geom_jitter()
+
+
+
+ASV_long %>%
+  filter(Abundance>0) %>%
+  group_by(sample_ID, Challenge) %>%
+  summarise(num_ASVs=n()) %>%
+  ggplot(aes(x=Challenge, y=num_ASVs)) + geom_boxplot() +
+  # scale_y_log10() +
+  geom_jitter()
+
+
+
+unclass_ASV_summary <-
+  ASV_long %>%
+  filter(is.na(domain)) %>%
+  filter(Abundance != 0) %>%
+  group_by(OTU) %>%
+  summarise(tot_counts=sum(Abundance),
+            num_samples=n(),
+            av_per_sample=mean(Abundance),
+            med_per_sample=median(Abundance)) %>%
+  arrange(desc(num_samples))
+
+
+bad_unclassified_ASVs <- unclass_ASV_summary %>% filter(num_samples < 20) %>% pull(OTU)
+
+
 write_rds(ps_clean, './processed_data/phyloseq_decontam.rds')
+
+
