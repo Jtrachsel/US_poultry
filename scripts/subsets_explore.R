@@ -76,6 +76,14 @@ explore <- function(ps, variable){
   # TODO
   # add adonis2 results object as part of return list
   # browser()
+
+  tax <-
+    ps@tax_table %>%
+    as(., Class = 'matrix') %>%
+    as.data.frame() %>%
+    rownames_to_column(var = 'ASV')
+
+
   tst <- ps %>% NMDS_from_phyloseq(variable)
 
   p1 <- tst[[1]] %>%

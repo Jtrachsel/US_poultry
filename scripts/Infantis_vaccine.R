@@ -2,9 +2,34 @@ library(phyloseq)
 library(tidyverse)
 
 ps <- read_rds('processed_data/phyloseq_final.rds')
-prune_samples(samples = ps@sam_data$Vaccine == 'Mock' &
-                ps@sam_data$Challenge == 'Mock' &
-                ps@sam_data$day_post_challenge %in% c('7', '14'), x = ps)
+
+MOCK_MOCKD7D14 <-
+  prune_samples(
+    samples = ps@sam_data$Vaccine == 'Mock' &
+              ps@sam_data$Challenge == 'Mock' &
+              ps@sam_data$day_post_challenge %in% c(7,14), x = ps)
+             #ps@sam_data$day_post_challenge %in% c(7), x = ps)
+             #ps@sam_data$day_post_challenge %in% c(14), x = ps)
+
+INFANTIS_INFECT <-
+  prune_samples(
+    samples = ps@sam_data$Challenge == 'Infantis',
+    x=ps)
+
+
+INFANTIS <- merge_phyloseq(MOCK_MOCKD7D14, INFANTIS_INFECT)
+
+INFANTIS@sam_data$Vac_Inf <- paste0(INFANTIS@sam_data$Vaccine,'_', INFANTIS@sam_data$Challenge)
+library(cowplot)
+
+library(DESeq2)
+
+tst <- explore(ps = INFANTIS, variable = 'Vac_Inf')
+
+tst[[3]]$difabund_plot[[1]]
+
+
+
 # Infantis vaccine trial
 
 ### PULL IN MOCK INFECTED MOCK VACCINATED FROM D7 and D14
