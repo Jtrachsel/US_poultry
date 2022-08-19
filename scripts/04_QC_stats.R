@@ -24,19 +24,19 @@ P_reads_histogram <-
   theme_bw()
 P_reads_histogram
 # track %>% filter(nonchim)
-
+ggsave('figures/01_QC_hist_prefilt.jpeg', bg='white')
 
 # tax <- read_tsv('./processed_data/ASV_taxonomy.tsv')
 
 # ASV_counts <- read_tsv('processed_data/ASV_counts.tsv')
 
-# ps <- readRDS('./processed_data/phyloseq_decontam.rds')
+ps <- readRDS('./processed_data/phyloseq_decontam.rds')
 
-# ASV_long <-
-#   ps %>%
-#   # rarefy_even_depth() %>%
-#   # transform_sample_counts(fun = function(x) x / sum(x)) %>%
-#   psmelt()
+ASV_long <-
+  ps %>%
+  # rarefy_even_depth() %>%
+  # transform_sample_counts(fun = function(x) x / sum(x)) %>%
+  psmelt()
 
 # ASV_long2 <-
 #   ASV_counts %>%
@@ -87,7 +87,7 @@ P_reads_histogram
 # one for the asvs that occur in each sample type
 # ASV_long
 # ASV_long %>% arrange((count))
-ASV_long$Abundance
+# ASV_long$Abundance
 # ASV_long %>%
 #   filter(Abundance>0) %>%
 #   group_by(sample_ID, Challenge) %>%
@@ -96,16 +96,16 @@ ASV_long$Abundance
 #   # scale_y_log10() +
 #   geom_jitter()
 
-
-ASV_long %>%
-  filter(Abundance>0) %>%
-  group_by(sample_ID, Challenge) %>%
-  summarise(num_ASVs=n()) %>%
-  ggplot(aes(x=Challenge, y=num_ASVs)) + geom_boxplot() +
-  # scale_y_log10() +
-  geom_jitter()
-
-
+#
+# ASV_long %>%
+#   filter(Abundance>0) %>%
+#   group_by(sample_ID, Challenge) %>%
+#   summarise(num_ASVs=n()) %>%
+#   ggplot(aes(x=Challenge, y=num_ASVs)) + geom_boxplot() +
+#   # scale_y_log10() +
+#   geom_jitter()
+#
+#
 
 #
 # mock_ASVs <- ASV_long %>% filter(sample_type == 'mock' & Abundance > 0) %>% pull(OTU) %>% unique()
@@ -141,19 +141,19 @@ ASV_long %>%
 
 
 # PRINT THIS SUMMARY
-unclass_ASV_summary <-
-  ASV_long %>%
-  filter(is.na(domain)) %>%
-  filter(Abundance != 0) %>%
-  group_by(OTU, ASV_seq) %>%
-  summarise(tot_counts=sum(Abundance),
-            num_samples=n(),
-            av_per_sample=mean(Abundance),
-            med_per_sample=median(Abundance)) %>%
-  arrange(desc(num_samples))
-
-
-unclass_ASV_summary %>% pull(ASV_seq)
+# unclass_ASV_summary <-
+#   ASV_long %>%
+#   filter(is.na(domain)) %>%
+#   filter(Abundance != 0) %>%
+#   group_by(OTU, ASV_seq) %>%
+#   summarise(tot_counts=sum(Abundance),
+#             num_samples=n(),
+#             av_per_sample=mean(Abundance),
+#             med_per_sample=median(Abundance)) %>%
+#   arrange(desc(num_samples))
+#
+#
+# unclass_ASV_summary %>% pull(ASV_seq)
 
 # unclass_ASV_summary %>% slice_head() %>% pull(ASV)
 
@@ -205,7 +205,9 @@ NMDSpre <- NMDS_ellipse(sam_dat_pre, otu_mat_pre, grouping_set = 'sample_type', 
 # THIS ONE LOW READ SAMPLES MORE SIMILAR TO NTCS
 NMDSpre[[1]] %>%
   ggplot(aes(x=MDS1, y=MDS2)) +
-  geom_point(aes(fill=sample_type, size=Read_depth), color='white', shape=21)
+  geom_point(aes(fill=sample_type, size=Read_depth), color='black', shape=21)
+
+ggsave('figures/02_NMDS_pre_filter.jpeg', bg='white')
 
 ########
 
@@ -249,11 +251,50 @@ NMDSpost <- NMDS_ellipse(sam_dat_post, otu_mat_post, grouping_set = 'sample_type
 ### THIS ONE
 NMDSpost[[1]] %>%
   ggplot(aes(x=MDS1, y=MDS2)) +
-  geom_point(aes(fill=sample_type, size=Read_depth), color='white', shape=21) +
-  theme_bw()
+  geom_point(aes(fill=sample_type, size=Read_depth), color='black', shape=21)
+
+ggsave('figures/03_NMDS_post_filter.jpeg')
 
 
 
+
+
+######
+
+# merge colonization data
+col_dat <-  read_tsv('processed_data/Infantis_colonization_clean.tsv')
+
+
+ps <- read_rds('./processed_data/phyloseq_decontam.rds')
+
+
+
+SAMDAT <-
+  ps@sam_data %>%
+  as(object = ., Class = 'matrix') %>%
+  as.data.frame() %>%
+  as_tibble()
+
+SAMDAT <-
+  SAMDAT %>%
+  mutate(turkey_ID=sub('.*_([0-9]+$)','\\1',sample_ID)) %>%
+  mutate(ID=paste0(turkey_ID, '_', Vaccine, '_', Challenge)) %>%
+  select(-starts_with('CFU'))
+
+col_dat <-
+  col_dat %>%
+  mutate(Vaccine=sub('mock', 'Mock', Vaccine),
+         Vaccine=sub('AviPro', 'AVIPRO', Vaccine),
+         Vaccine=sub('866', 'BBS866', Vaccine),
+         ID=paste0(turkey_ID, '_', Vaccine, '_', 'Infantis')) %>%
+  select(ID, CFU, log10_CFU)
+
+SAMDAT <- SAMDAT %>% left_join(col_dat) %>% sample_data()
+sample_names(SAMDAT) <- SAMDAT$sample_ID
+sample_data(ps) <- SAMDAT
+
+write_rds(ps, 'processed_data/phyloseq_final.rds')
+#####
 # NMDSpost[[1]] %>%
 #   ggplot(aes(x=MDS1, y=MDS2)) +
 #   geom_point(aes(fill=Vaccine), color='white', shape=21, size=3)

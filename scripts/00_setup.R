@@ -1,10 +1,11 @@
 library(usethis)
 
-
+use_directory('output')
 use_directory('raw_data')
 use_directory('processed_data')
 use_directory('reference_data')
 use_directory('scripts')
+use_directory('figures')
 use_readme_rmd()
 
 options(timeout=6000)

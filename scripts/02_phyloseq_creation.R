@@ -74,7 +74,8 @@ samdat <-
     Challenge=ifelse(sample_type == 'exp', Challenge, 'none'),
     Vaccine  =ifelse(sample_type == 'exp', Vaccine, 'none'),
     Vaccine_Booster_Route=ifelse(sample_type == 'exp', Vaccine_Booster_Route, 'none'),
-    is_neg=ifelse(sample_type == 'neg', TRUE, FALSE)) %>%
+    is_neg=ifelse(sample_type == 'neg', TRUE, FALSE),
+    dpc=day_post_challenge) %>%
   sample_data()
 
 sample_names(samdat) <- samdat$sample_ID
