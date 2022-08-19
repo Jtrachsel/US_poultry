@@ -2,7 +2,9 @@ library(phyloseq)
 library(tidyverse)
 
 ps <- read_rds('processed_data/phyloseq_final.rds')
-
+prune_samples(samples = ps@sam_data$Vaccine == 'Mock' &
+                ps@sam_data$Challenge == 'Mock' &
+                ps@sam_data$day_post_challenge %in% c('7', '14'), x = ps)
 # Infantis vaccine trial
 
 ### PULL IN MOCK INFECTED MOCK VACCINATED FROM D7 and D14

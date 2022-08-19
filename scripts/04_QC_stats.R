@@ -277,8 +277,9 @@ SAMDAT <-
 
 SAMDAT <-
   SAMDAT %>%
-  mutate(turkey_ID=sub('.*_([0-9]+$)','\\1',sample_ID)) %>%
-  mutate(ID=paste0(turkey_ID, '_', Vaccine, '_', Challenge)) %>%
+  mutate(turkey_ID=sub('.*_([0-9]+$)','\\1',sample_ID),
+         ID=paste0(turkey_ID, '_', Vaccine, '_', Challenge),
+         day_post_challenge=as.numeric(day_post_challenge)) %>%
   select(-starts_with('CFU'))
 
 col_dat <-
