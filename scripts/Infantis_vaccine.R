@@ -3,6 +3,22 @@ library(tidyverse)
 
 ps <- read_rds('processed_data/phyloseq_final.rds')
 
+
+###
+
+# Infantis vaccine trial
+
+### PULL IN MOCK INFECTED MOCK VACCINATED FROM D7 and D14
+# MOCK MOCK D7
+# MOCK MOCK D14
+# MOCK INF D10
+# AVIPRO INF D10
+# BBS866 INF D10
+
+
+
+
+
 MOCK_MOCKD7D14 <-
   prune_samples(
     samples = ps@sam_data$Vaccine == 'Mock' &
@@ -27,17 +43,46 @@ library(DESeq2)
 tst <- explore(ps = INFANTIS, variable = 'Vac_Inf')
 
 tst[[3]]$difabund_plot[[1]]
+tst[[3]]$res[[1]] %>% as_tibble()
+
+
+#Very interesting... Vaccines seem to have made Salmonella colonization
+# worse.
+# Significantly higher Sal Shedding in both AviPro and BBS866 vaccinated groups
+# compared to Mock Vaccinated Infantis challenged group.
+
+# Large differences in bacterial communities from cecal contents
+# when comparing infantis infected groups back to mock-infected controls, the
+# mock vaccinated are the most similar to the mock-challenged. and  both
+# vaccine groups are quite different from the mock vaccine and each other.
+
+# seems like each vaccine enhanced the 'salmonella effect' on microbial communities
+#
+
+# SPECULATION ZONE:
+# could it be that being vaccinated enhanced the inflammatory immune response
+# so when salmonella was encountered again, increased gut inflammation allowed more
+# extensive colonization?
+
+# Alternatively, could vaccination have effected microbial communities? then
+# these changed microbial communities were less effective at excluding Salmonella
+# upon infection?
 
 
 
-# Infantis vaccine trial
+### PULL IN UN-INFECTED BUT VACCINATED BIRDS FROM READING PORTION #
 
-### PULL IN MOCK INFECTED MOCK VACCINATED FROM D7 and D14
-# MOCK MOCK D7
-# MOCK MOCK D14
-# MOCK INF D10
-# AVIPRO INF D10
-# BBS866 INF D10
+
+####
+
+
+
+
+
+
+
+
+
 
 # first answer SHawns Qs as written
 

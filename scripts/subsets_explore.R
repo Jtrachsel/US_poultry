@@ -176,6 +176,12 @@ ps@sam_data %>%
   pivot_wider(names_from = Challenge, values_from = n)
 
 
+ps@sam_data %>%
+  group_by(day_post_vaccination,day_post_challenge, Challenge, Vaccine) %>%
+  tally() %>%
+  pivot_wider(names_from = Challenge, values_from = n)
+
+
 
 # A: vaccination effects on Turkey microbiome
 # BBS866 vaccine
