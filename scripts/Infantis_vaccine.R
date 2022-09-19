@@ -59,6 +59,11 @@ tst[[3]]$res[[1]] %>% as_tibble()
 # seems like each vaccine enhanced the 'salmonella effect' on microbial communities
 #
 
+#in summary, not only is vaccination associated with worse colonization, it
+# is also associated with greater difference in microbial communities after
+# salmonella Infantis infection.
+
+
 # SPECULATION ZONE:
 # could it be that being vaccinated enhanced the inflammatory immune response
 # so when salmonella was encountered again, increased gut inflammation allowed more

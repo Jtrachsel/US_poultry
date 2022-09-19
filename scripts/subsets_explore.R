@@ -36,8 +36,8 @@ DESeq_single_contrast <-
       lfcShrink(DESeq_obj, coef=COEF) %>%
       as(Class = 'data.frame') %>%
       rownames_to_column(var=rowname_var) %>%
-      filter(padj < 0.05) %>%
-      filter(abs(log2FoldChange) > .5) %>%
+      # filter(padj < 0.05) %>%
+      # filter(abs(log2FoldChange) > .5) %>%
       left_join(tax_tab) %>%
       mutate({{COL}}:=ifelse(log2FoldChange > 0, res_names[2], res_names[3]))
 
@@ -99,15 +99,32 @@ explore <- function(ps, variable){
 
   # ADON <- adonis2(A_mat ~ A_dat[[variable]], data = A_dat)
 
-  p2 <- pairwise.adonis(A_mat, factors = A_dat[[variable]]) %>%
-    ggplot(aes(y=pairs, x=F.Model)) + geom_col() +
+
+  PWADON_res <- pairwise.adonis(A_mat, factors = A_dat[[variable]])
+  p2 <-  PWADON_res %>%
+    ggplot(aes(y=pairs, x=F.Model)) +
+    geom_col() +
+    geom_text(aes(label=p.adjusted))+
     theme_half_open()
 
 
 
   ### THIS SHOULD BE A FUNCTION
+  # Alpha Diversity
 
 
+  ALPHA <-
+    ps %>%
+    rarefy_even_depth() %>%
+    estimate_richness() %>%
+    rownames_to_column(var = 'sample_ID') %>%
+    left_join(ps@sam_data %>% as(Class='matrix') %>% as.data.frame())
+
+  # ALPHA %>%
+  #   ggplot(aes(x=!!sym(variable)), y=Shannon, fill=!!sym(variable)) +
+  #   geom_boxplot()
+
+  # lm(data = ALPHA, formula = Shannon~!!sym(variable))) %>% broom::tidy()
 
 
   A_3_DE <- phyloseq_to_deseq2(ps, design = as.formula(paste0('~', variable)))
@@ -147,13 +164,14 @@ explore <- function(ps, variable){
   #   geom_point(size=2.5, shape=21) +
   #   geom_vline(xintercept = 0)
   # end function
-  return(list(p1, p2, res_tibble))
+  return(list(NMDS=p1, PWADON=p2, DIFFABUND=res_tibble, ALPHA_dat=ALPHA))
 }
 
 
 #########
 
-ps <- read_rds('processed_data/phyloseq_decontam.rds')
+
+ps <- read_rds('processed_data/phyloseq_final.rds')
 
 tax <-
   ps@tax_table %>%
@@ -229,97 +247,140 @@ A_comp3 <-
   prune_taxa(taxa = taxa_sums(.) > 0)
 
 ### ANCOMBC explore ##
-
-ANCOM_RES <- ancombc(A_comp3, formula = "Vaccine", group = 'Vaccine', struc_zero = TRUE, global = TRUE)
-
-ANCOM_RES$res$beta$VaccineBBS866 %>% hist()
-ANCOM_RES$res$beta$VaccineAVIPRO %>% hist()
-
-ANCOM_RES$res$lfc
+#
+# ANCOM_RES <- ancombc(A_comp3, formula = "Vaccine", group = 'Vaccine', struc_zero = TRUE, global = TRUE)
+#
+# ANCOM_RES$res$beta$VaccineBBS866 %>% hist()
+# ANCOM_RES$res$beta$VaccineAVIPRO %>% hist()
+#
+# ANCOM_RES$res$lfc
 
 
 ##### THIS ONE
 
-tst <- A_comp3 %>% NMDS_from_phyloseq('Vaccine')
+# alpha Diversity
 
-tst[[1]] %>%
-  ggplot(aes(x=MDS1, y=MDS2, fill=Vaccine)) +
-  geom_point(shape=21, color='white', size=4) +
-  geom_segment(aes(xend=centroidX, yend=centroidY, color=Vaccine), alpha=.5) +
-  theme_bw()
+A_COMP_3_RES <- explore(A_comp3, variable = 'Vaccine')
+A_COMP_3_RES$NMDS
+A_COMP_3_RES$PWADON
+A_COMP_3_RES$DIFFABUND
 
-
-A_mat <- A_comp3@otu_table %>% as(Class='matrix')
-A_dat <- A_comp3@sam_data %>% as(Class='data.frame')
-
-look <- adonis2(A_mat ~ Vaccine, data = A_dat)
-
-pairwise.adonis(A_mat, factors = A_dat[['Vaccine']]) %>%
-  ggplot(aes(y=pairs, x=F.Model)) + geom_col() +
-  theme_half_open()
+A_COMP_3_RES$DIFFABUND %>% select(-difabund_plot) %>%
+  mutate(filename=paste0('output/', comparison,'.tsv'),
+         WRITE=map2(.x=filename, .y=res, .f=~write_tsv(x = .y, file = .x)))
 
 
-A_3_DE <- phyloseq_to_deseq2(A_comp3, design = ~ Vaccine)
+A_COMP_3_RES$ALPHA_dat <-
+  A_COMP_3_RES$ALPHA_dat %>%
+  mutate(Vaccine=factor(Vaccine, levels=c('Mock', 'AVIPRO', 'BBS866')))
 
-A_3_DE <- A_3_DE %>% DESeq2::DESeq()
+lm(data = A_COMP_3_RES$ALPHA_dat, formula = Shannon~Vaccine) %>% broom::tidy()
+
+A_COMP_3_RES$ALPHA_dat %>%
+  ggplot(aes(x=Vaccine, y=Shannon, fill=Vaccine)) + geom_boxplot() +
+  theme_half_open() +
+  ggtitle('', 'AVIPRO vs Mock P=0.0002, BBS866 vs Mock P=0.20')
 
 
-num_res <- length(resultsNames(A_3_DE))
 
-res_tibble <- tibble(comparison=resultsNames(A_3_DE)[-1])
+ggsave('figures/05_vaccine_effect_alpha.jpeg', bg='white', height=4, width=7, units = 'in')
 
-res_tibble %>%
-  mutate(res=map(.x = comparison,
-                 .f=~DESeq_single_contrast(DESeq_obj = A_3_DE, COEF = .x, tax_tab = tax)))
+A_COMP_3_RES$NMDS
 
+# tst <- A_comp3 %>% NMDS_from_phyloseq('Vaccine')
+#
+# tst[[1]] %>%
+#   ggplot(aes(x=MDS1, y=MDS2, fill=Vaccine)) +
+#   geom_point(shape=21, color='white', size=4) +
+#   geom_segment(aes(xend=centroidX, yend=centroidY, color=Vaccine), alpha=.5) +
+#   theme_bw()
+ggsave('figures/06_vaccine_effect_NMDS.jpeg', bg='white', height=5, width=7, units = 'in')
+
+
+A_COMP_3_RES$PWADON
+ggsave('figures/07_vaccine_effect_PWadon.jpeg', bg='white', height=3, width = 7, units = 'in')
+
+
+#
+# A_3_DE <- phyloseq_to_deseq2(A_comp3, design = ~ Vaccine)
+#
+# A_3_DE <- A_3_DE %>% DESeq2::DESeq()
+#
+#
+# num_res <- length(resultsNames(A_3_DE))
+#
+# res_tibble <- tibble(comparison=resultsNames(A_3_DE)[-1])
+#
+# res_tibble %>%
+#   mutate(res=map(.x = comparison,
+#                  .f=~DESeq_single_contrast(DESeq_obj = A_3_DE, COEF = .x, tax_tab = tax)))
+#
 
 # BBS866_diffabund <- results(A_3_DE, name ='Vaccine_BBS866_vs_Mock')
 # AVIPRO_diffabund <- results(A_3_DE, name ='Vaccine_AVIPRO_vs_Mock')
 
+BBS866_diffabund <- A_COMP_3_RES$DIFFABUND$res[[1]]%>% mutate(vaccine='BBS866')
 
+# BBS866_diffabund <-
+#   lfcShrink(A_3_DE, coef ='Vaccine_BBS866_vs_Mock') %>%
+#   as(Class = 'data.frame') %>%
+#   rownames_to_column(var='ASV') %>%
+#   rownames_to_column() %>%
+#   filter(padj < 0.05) %>%
+#   filter(abs(log2FoldChange) > .5) %>%
+#   left_join(tax) %>%
+#   mutate(vaccine='BBS866')
+AVIPRO_diffabund <- A_COMP_3_RES$DIFFABUND$res[[2]] %>% mutate(vaccine='AVIPRO')
 
-
-BBS866_diffabund <-
-  lfcShrink(A_3_DE, coef ='Vaccine_BBS866_vs_Mock') %>%
-  as(Class = 'data.frame') %>%
-  rownames_to_column(var='ASV') %>%
-  rownames_to_column() %>%
-  filter(padj < 0.05) %>%
-  filter(abs(log2FoldChange) > .5) %>%
-  left_join(tax) %>%
-  mutate(vaccine='BBS866')
-
-
-AVIPRO_diffabund <-
-  lfcShrink(A_3_DE, coef ='Vaccine_AVIPRO_vs_Mock') %>%
-  as(Class = 'data.frame') %>%
-  rownames_to_column(var='ASV') %>%
-  rownames_to_column() %>%
-  filter(padj < 0.05) %>%
-  filter(abs(log2FoldChange) > .5) %>%
-  left_join(tax) %>%
-  mutate(vaccine='AVIPRO')
+#
+# AVIPRO_diffabund <-
+#   lfcShrink(A_3_DE, coef ='Vaccine_AVIPRO_vs_Mock') %>%
+#   as(Class = 'data.frame') %>%
+#   rownames_to_column(var='ASV') %>%
+#   rownames_to_column() %>%
+#   filter(padj < 0.05) %>%
+#   filter(abs(log2FoldChange) > .5) %>%
+#   left_join(tax) %>%
+#   mutate(vaccine='AVIPRO')
 
 
 both_diff <- bind_rows(AVIPRO_diffabund, BBS866_diffabund)
 
 in_both <- intersect(AVIPRO_diffabund$ASV, BBS866_diffabund$ASV)
 
-
+library(cowplot)
 # difabund in either vaccine vs mock
 both_diff %>%
   # filter(ASV %in% in_both) %>%
   ggplot(aes(x=log2FoldChange, y=genus, fill=vaccine)) +
   geom_point(size=2.5, shape=21) +
-  geom_vline(xintercept = 0)
+  geom_vline(xintercept = 0) +
+  theme_half_open() +
+  annotate(geom='label', x=-5, y=-1, label='Mock')+
+  annotate(geom='text', x=-5, y=-3, label='')+
+  annotate(geom='label', x=5, y=-1, label='Vaccine')+
+  theme(panel.grid.major.y = element_line(color='grey'))
+
+ggsave('./figures/08_vaccine_diffabund_all.jpeg', bg='white', width=9, height=9, units = 'in')
 
 # diffabund in both vaccines vs mock
 both_diff %>%
   filter(ASV %in% in_both) %>%
   ggplot(aes(x=log2FoldChange, y=genus, fill=vaccine)) +
-  geom_point(size=2.5, shape=21) +
-  geom_vline(xintercept = 0)
+  geom_jitter(size=2.5, shape=21, height = .1) +
+  geom_vline(xintercept = 0)+
+  theme_half_open() +
+  annotate(geom='label', x=-5, y=-.5, label='Mock')+
+  annotate(geom='text', x=-5, y=-1, label='')+
+  annotate(geom='label', x=5, y=-.5, label='Vaccine')+
+  theme(panel.grid.major.y = element_line(color='grey'))
 
+ggsave('./figures/09_vaccine_diffabund_BOTH.jpeg', bg='white', width=9, height=5, units = 'in')
+
+
+
+#### TO DO!!! FROM THE OTUS THAT WENT UP IN INFANTIS INFECTED GROUPS LABEL THE
+# ONES THAT SHOW UP IN THE VACCINE ASSOCIATED GROUPS
 
 
 # AVIPRO_diffabund %>% ggplot(aes(x=log2FoldChange, y=genus)) + geom_point()
@@ -333,6 +394,9 @@ both_diff %>%
 # B. Infantis Challenge effect on turkey microbiome
 # really only 1 timepoint here even though its 10 and 14 in the metadata
 
+# ONLY MOCK VACCINATED
+# MOCK AND INFANTIS INFECTED
+
 B <-
   ps %>%
   subset_samples(ps@sam_data$day_post_challenge %in% c(10, 14) &
@@ -343,10 +407,20 @@ B <-
 
 B_res <- explore(ps = B, variable = 'Challenge')
 
-B_res[[1]]
-B_res[[2]]
-B_res[[3]]$difabund_plot[[1]]
-B_res[[3]]$res
+B_res$NMDS + ggtitle('Mock Vaccinated Only')
+ggsave('./figures/10_Mock_vaccine_Infantis_challenge_NMDS.jpeg', bg='white', height=5, width=7, units = 'in')
+B_res$PWADON
+
+B_res$DIFFABUND$difabund_plot[[1]]
+ggsave('./figures/11_Mock_vaccine_Infantis_challenge_difabund.jpeg', bg='white', width=9, height=8, units = 'in')
+
+B_res$ALPHA_dat %>%
+  ggplot(aes(x=Challenge, y=Shannon)) +
+  geom_boxplot(aes(fill=Challenge)) +
+  ggtitle('','Infantis vs Mock P=0.00008')
+ggsave('./figures/12_Mock_vaccine_Infantis_challenge_alpha.jpeg', bg='white', width=7, height=4)
+
+lm(data=B_res$ALPHA_dat, formula = Shannon~Challenge) %>% broom::tidy()
 
 ###
 
@@ -368,6 +442,29 @@ C <-
   prune_taxa(taxa = taxa_sums(.) > 0)
 
 C_res <- explore(C, 'Vaccine')
+
+
+C_res$NMDS
+
+ggsave('figures/13_BBSvaccine_effect_on_infection_NMDS.jpeg', bg='white', height=5, width=7, units = 'in')
+#
+C_res$PWADON
+#
+C_res$DIFFABUND$difabund_plot
+ggsave('figures/14_BBSvaccine_effect_on_infection_difabund.jpeg', bg='white', height=8, width=7, units = 'in')
+#
+
+
+lm(data=C_res$ALPHA_dat, formula= Shannon~Vaccine) %>% broom::tidy()
+C_res$ALPHA_dat %>%
+  ggplot(aes(x=Vaccine, y=Shannon, fill=Vaccine)) +
+  geom_boxplot()+
+  ggtitle('','P=0.002')
+#
+ggsave('figures/15_BBSvaccine_effect_on_infection_alpha.jpeg', bg='white', height=4, width=7, units = 'in')
+
+
+
 ###
 #
 
@@ -399,161 +496,263 @@ D <-
 D_res <- explore(D, 'Vaccine')
 
 
+D_res$NMDS
 
-
-# 10 days into an infantis infection, how different do the groups look?
-
-CD_comb <-
-  ps %>%
-  subset_samples(ps@sam_data$day_post_challenge %in% c(10) &
-                   ps@sam_data$Vaccine %in% c('Mock', 'AVIPRO', 'BBS866') &
-                   ps@sam_data$Challenge %in% c('Infantis')) %>%
-  prune_taxa(taxa = taxa_sums(.) > 10)
-
-
-CD_res <- explore(CD_comb, 'Vaccine')
-
-CD_res[[1]]
-CD_res[[2]]
-CD_res[[3]]$difabund_plot[[1]]
-CD_res[[3]]$difabund_plot[[2]]
-
-######
-
+ggsave('figures/16_AVIPROvaccine_effect_on_infection_NMDS.jpeg', bg='white', height=5, width=7, units = 'in')
 #
-# E. Reading Challenge effect on turkey microbiome
-# Samples: Mock-vaccinated/mock-challenged and mock-vaccinated/Reading-challenged @ 2,7, 14, 21 dpi
-# Question: did challenge with Salmonella Reading alter the microbial composition of the turkey cecum (cecal contents)
+D_res$PWADON
 #
-# Comparison #1 @ 2dpi:
-# 12 Mock-vaccinated/mock-challenged turkeys:        MM_D2 #1-12
-# VERSUS
-# 12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D2 #1-12
-#
-# Comparison #2 @ 7dpi:
-# 12 Mock-vaccinated/mock-challenged turkeys:        MM_D7 #1-12
-# VERSUS
-# 12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D7 #1-12
-#
-# Comparison #3 @ 14dpi:
-# 12 Mock-vaccinated/mock-challenged turkeys:        MM_D14 #1-12
-# VERSUS
-# 12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D14 #1-12
-#
-# Comparison #4 @ 21dpi:
-# 16 Mock-vaccinated/mock-challenged turkeys:        MM_D21 #1-16
-# VERSUS
-# 16 mock-vaccinated/Reading-challenged turkeys:    Mreading_D21 #1-16
+D_res$DIFFABUND$difabund_plot
+ggsave('figures/17_AVIPROvaccine_effect_on_infection_difabund.jpeg', bg='white', height=9, width=7, units = 'in')
 #
 
+lm(data=D_res$ALPHA_dat, formula = Shannon~Vaccine) %>% broom::tidy()
+D_res$ALPHA_dat %>%
+  ggplot(aes(x=Vaccine, y=Shannon, fill=Vaccine)) +
+  geom_boxplot() +
+  ggtitle('','P=0.069')
+#
+ggsave('figures/18_AVIPROvaccine_effect_on_infection_alpha.jpeg', bg='white', height=4, width=7, units = 'in')
+
+# # 10 days into an infantis infection, how different do the groups look?
+#
+# CD_comb <-
+#   ps %>%
+#   subset_samples(ps@sam_data$day_post_challenge %in% c(10) &
+#                    ps@sam_data$Vaccine %in% c('Mock', 'AVIPRO', 'BBS866') &
+#                    ps@sam_data$Challenge %in% c('Infantis')) %>%
+#   prune_taxa(taxa = taxa_sums(.) > 10)
+#
+#
+# CD_res <- explore(CD_comb, 'Vaccine')
+#
+# CD_res$NMDS
+# CD_res$PWADON
+# CD_res$DIFFABUND$difabund_plot[[1]]
+# CD_res$DIFFABUND$difabund_plot[[2]]
+
+MOCK_MOCKD7D14 <-
+  prune_samples(
+    samples = ps@sam_data$Vaccine == 'Mock' &
+      ps@sam_data$Challenge == 'Mock' &
+      ps@sam_data$day_post_challenge %in% c(14), x = ps)
+#ps@sam_data$day_post_challenge %in% c(7), x = ps)
+#ps@sam_data$day_post_challenge %in% c(14), x = ps)
+
+INFANTIS_INFECT <-
+  prune_samples(
+    samples = ps@sam_data$Challenge == 'Infantis',
+    x=ps)
 
 
-E <-
-  ps %>%
-  subset_samples(ps@sam_data$Vaccine %in% c('Mock') &
-                 ps@sam_data$Challenge %in% c('Mock', 'Reading')) %>%
-  prune_taxa(taxa = taxa_sums(.) > 0)
+INFANTIS <- merge_phyloseq(MOCK_MOCKD7D14, INFANTIS_INFECT)
+
+INFANTIS@sam_data$Vac.Inf <- paste0(INFANTIS@sam_data$Vaccine,'.', INFANTIS@sam_data$Challenge)
+
+INFANTIS@sam_data$Vac.Inf <-
+  factor(INFANTIS@sam_data$Vac.Inf,
+         levels = c('Mock.Mock', 'Mock.Infantis','AVIPRO.Infantis', 'BBS866.Infantis'))
+
+INFANTIS2 <- INFANTIS
+
+INFANTIS2@sam_data$Vac.Inf <-
+  factor(INFANTIS@sam_data$Vac.Inf,
+         levels = c('Mock.Infantis','Mock.Mock', 'AVIPRO.Infantis', 'BBS866.Infantis'))
 
 
-E@sam_data$dpc <- E@sam_data$day_post_challenge
-E@sam_data$set <- paste(E@sam_data$day_post_challenge, E@sam_data$Challenge, sep = '_')
-
-tmp <- NMDS_from_phyloseq(E, 'set')
-
-tmp[[2]] <-
-  tmp[[2]] %>%
-  mutate(day_post_challenge=sub('(-?[0-9]+)_([A-Za-z]+)','\\1',group),
-         Challenge=sub('(-?[0-9]+)_([A-Za-z]+)','\\2',group))
-
-tmp[[1]] %>%
-  ggplot(aes(x=MDS1, y=MDS2, color=Challenge)) +
-  geom_segment(aes(xend=centroidX, yend=centroidY))+
-  geom_point(aes(color=Challenge)) +
-  facet_wrap(~factor(day_post_challenge))
-
-tmp[[1]] %>%
-  select(centroidX, centroidY, Challenge, day_post_challenge) %>%
-  unique() %>%
-  arrange(day_post_challenge) %>%
-  ggplot(aes(x=centroidX, y=centroidY, color=Challenge)) +
-  geom_path(aes(group=Challenge))+
-  geom_point(size=6) +
-  geom_text(aes(label=day_post_challenge), color='black')
-
-# Should try lrt tests here
-E@sam_data$dpc <- factor(E@sam_data$dpc, levels=c('-1', '2', '7', '14', '21'))
-
-dds <- phyloseq_to_deseq2(physeq = E, design = ~ Challenge + dpc + Challenge:dpc)
-
-dds_lrt_time <- DESeq(dds, test="LRT", reduced = ~ Challenge + dpc)
 
 
-# for a LRT, lfc values depend on the contrast/coef but the p values do not?
-clustering_sig_genes <-
-  dds_lrt_time %>%
-  results() %>%
+library(cowplot)
+
+library(DESeq2)
+
+tst <- explore(ps = INFANTIS, variable = 'Vac.Inf')
+
+tst2 <- explore(ps = INFANTIS2, variable = 'Vac.Inf')
+
+tst$DIFFABUND
+tst2$DIFFABUND %>%
+  mutate(filename=paste0('output/', comparison,'.tsv'),
+         WRITE=map2(.x=filename, .y=res, .f=~write_tsv(x = .y, file = .x)))
+
+
+bind_rows(tst$DIFFABUND, tst2$DIFFABUND) %>%
+  filter(comparison != 'Vac.Inf_Mock.Mock_vs_Mock.Infantis') %>%
+  select(-difabund_plot) %>% unnest(res) %>%
+  mutate(padj2=p.adjust(pvalue, method = 'fdr')) %>%
+  filter(padj2 < 0.05) %>%
+  group_by(comparison) %>%
+  nest() %>%
+  mutate(filename=paste0('output/', comparison,'.tsv'),
+         WRITE=map2(.x=filename, .y=data, .f=~write_tsv(x = .y, file = .x)))
+
+
+
+
+
+
+
+tst$NMDS
+ggsave('figures/19_Vaccine_infection_NMDS.jpeg', bg='white', height=5, width=7, units = 'in')
+
+
+
+tst$PWADON
+ggsave('figures/20_Vaccine_infection_PERMANOVA.jpeg', bg='white', height=2.5, width=6, units = 'in')
+
+p <- tst$ALPHA_dat %>% ggplot(aes(x=Vac.Inf, y=Shannon, fill=Vac.Inf)) +
+  geom_boxplot()
+p
+ggsave('figures/21_Vaccine_infection_ALPHA.jpeg', bg='white', height=4, width=7, units = 'in')
+
+
+
+MOD <- lm(data=tst$ALPHA_dat, formula= Shannon ~ Vac.Inf)
+EMM <- emmeans::emmeans(MOD, specs = c('Vac.Inf'))
+
+CONTRASTS <-
+  contrast(EMM, method = 'pairwise', adjust = 'BH') %>%
+  broom::tidy() #%>%
+  # arrange(adj.p.value)
+
+
+CONTRASTS %>% select(contrast, estimate, std.error, adj.p.value) %>%
+  write_tsv('output/All_infantis_alpha_tests.tsv')
+# VECTOR <- CONTRASTS$adj.p.value
+# names(VECTOR) <- CONTRASTS$contrast
+#
+# LETS <- multcompLetters(VECTOR)
+# LETS <- tibble(NAMES=names(LETS$Letters),LETS=LETS$monospacedLetters) %>%
+  # mutate(NAMES=gsub(' ','',NAMES))
+
+
+
+# ANNO_DAT <-
+  # tst$ALPHA_dat %>%
+  # group_by(Vac.Inf) %>%
+  # summarise(NAMES=unique(Vac.Inf), Shannon=max(Shannon)) %>%
+  # ungroup() %>%
+  # left_join(LETS)
+
+# p+geom_text(data=ANNO_DAT, aes(label=LETS), nudge_y = .2)
+
+
+
+# tst$DIFFABUND$res[[1]]
+# tst$DIFFABUND %>% select(-difabund_plot) %>% unnest(res)
+# tst$DIFFABUND$res[[1]] %>% as_tibble() %>% arrange(desc(padj))
+
+
+
+# VAC_CHAL_DESEQ <- INFANTIS %>% phyloseq_to_deseq2(design = ~ Vaccine + Challenge) %>%
+#   DESeq()
+#
+#
+# resultsNames(VAC_CHAL_DESEQ)
+# infantis_effect_diffabund <-
+#   DESeq2::lfcShrink(VAC_CHAL_DESEQ, coef ='Challenge_Infantis_vs_Mock' ) %>%
+#   as.data.frame() %>%
+#   rownames_to_column(var='ASV') %>%
+#   left_join(tax) %>%
+#   filter(padj <0.05) %>%
+#   filter(abs(log2FoldChange) > .5) %>%
+#   mutate(condition=ifelse(log2FoldChange > 0, 'Infantis', 'Mock-challenged'))
+#
+#
+# infantis_effect_diffabund %>% ggplot(aes(x=log2FoldChange, y=genus, fill=condition)) + geom_point(shape=21)
+#
+#
+# UP_IN_SALMONELLA <- infantis_effect_diffabund %>% filter(log2FoldChange > 0) %>% pull(ASV)
+# UP_IN_MOCKS <- infantis_effect_diffabund %>% filter(log2FoldChange < 0) %>% pull(ASV)
+#
+
+#Very interesting... Vaccines seem to have made Salmonella colonization
+# worse.
+# Significantly higher Sal Shedding in both AviPro and BBS866 vaccinated groups
+# compared to Mock Vaccinated Infantis challenged group.
+
+# Large differences in bacterial communities from cecal contents
+# when comparing infantis infected groups back to mock-infected controls, the
+# mock vaccinated are the most similar to the mock-challenged. and  both
+# vaccine groups are quite different from the mock vaccine and each other.
+
+# seems like each vaccine enhanced the 'salmonella effect' on microbial communities
+#
+
+#in summary, not only is vaccination associated with worse colonization, it
+# is also associated with greater difference in microbial communities after
+# salmonella Infantis infection.
+
+
+# SPECULATION ZONE:
+# could it be that being vaccinated enhanced the inflammatory immune response
+# so when salmonella was encountered again, increased gut inflammation allowed more
+# extensive colonization?
+
+# Alternatively, could vaccination have effected microbial communities? then
+# these changed microbial communities were less effective at excluding Salmonella
+# upon infection?
+
+
+
+### COULD THROW THESE IN ###
+
+
+PRE_INFECTION <- prune_samples(ps, samples=ps@sam_data$day_post_challenge == -1)
+
+
+
+INFANTIS <- merge_phyloseq(MOCK_MOCKD7D14, INFANTIS_INFECT, PRE_INFECTION)
+INFANTIS@sam_data$TIME <- ifelse(INFANTIS@sam_data$day_post_challenge > 0, 'PREINFECTION', 'POSTINFECTION')
+INFANTIS@sam_data$Vac.Inf.time <- paste0(INFANTIS@sam_data$Vaccine,'.', INFANTIS@sam_data$Challenge, '.',INFANTIS@sam_data$TIME)
+#
+# INFANTIS@sam_data$Vac.Inf <-
+#   factor(INFANTIS@sam_data$Vac.Inf,
+#          levels = c('Mock.Mock', 'Mock.Infantis','AVIPRO.Infantis', 'BBS866.Infantis'))
+#
+# INFANTIS@sam_data$Challenge
+library(cowplot)
+
+library(DESeq2)
+
+tst <- explore(ps = INFANTIS, variable = 'Vac.Inf.time')
+
+tst$NMDS
+
+
+
+ps@sam_data %>%
+  as.data.frame() %>%
+  filter(day_post_challenge == -1) %>%
+  group_by(Vaccine) %>%
+  tally()
+
+
+
+##### linear assoc
+# when you account for vaccine/room only two ASVs are linearly associated with salmonella
+# colonization in the cecum
+# this maybe becasue communities are so different within each room,
+
+
+AVIvac <- prune_samples(INFANTIS_INFECT, samples = INFANTIS_INFECT@sam_data$Vaccine == 'AVIPRO')
+BBSvac <- prune_samples(INFANTIS_INFECT, samples = INFANTIS_INFECT@sam_data$Vaccine == 'BBS866')
+MOCKvac <- prune_samples(INFANTIS_INFECT, samples = INFANTIS_INFECT@sam_data$Vaccine == 'Mock')
+#
+
+
+# INFANTIS_glom <- tax_glom(INFANTIS_INFECT, taxrank = 'genus')
+INFANTIS_DESEQ <- phyloseq_to_deseq2(MOCKvac, ~ log10_CFU) %>% DESeq()
+resultsNames(INFANTIS_DESEQ)
+
+lfcShrink(INFANTIS_DESEQ, coef = 'log10_CFU') %>%
   as.data.frame() %>%
   rownames_to_column(var='ASV') %>%
-  filter(padj < 0.01) %>%
-  left_join(tax)
+  left_join(tax) %>%
+  filter(padj < 0.05)
 
 
-# look for ASVs with similar patterns of abundance
-
-# rlog take a while...
-if (!file.exists('E_rlog.rds')){
-  rld <- rlog(dds, blind=FALSE)
-  write_rds(rld, 'E_rlog.rds')
-} else {
-  rld <- read_rds('E_rlog.rds')
-}
-
-library(DEGreport)
+scale(INFANTIS_INFECT@sam_data$log10_CFU)
 
 
-cluster_rlog <- rld[clustering_sig_genes$ASV, ]
-rlog_mat <- as.matrix(cluster_rlog@assays@data[[1]])
-
-clusters <- degPatterns(rlog_mat, metadata = data.frame(E@sam_data),minc=5, time = "dpc", col=NULL)
-
-clusters_col <- degPatterns(rlog_mat, metadata = data.frame(E@sam_data),minc=5, time = "dpc", col='Challenge')
-
-
-
-look <- clusters_col[['raw']]
-look$Challenge %>% unique()
-
-
-look %>%
-  filter(cluster == 1) %>%
-  ggplot(aes(x=dpc, y=value, color=Challenge))+
-  geom_point()
-#####
-
-
-F_ <-
-  ps %>%
-  subset_samples(ps@sam_data$Vaccine %in% c('BBS866', 'Mock') &
-                   ps@sam_data$Challenge %in% c('Reading')) %>%
-  prune_taxa(taxa = taxa_sums(.) > 0)
-
-
-
-
-######
-G <-
-  ps %>%
-  subset_samples(ps@sam_data$Vaccine %in% c('AVIPRO', 'Mock') &
-                   ps@sam_data$Challenge %in% c('Reading')) %>%
-  prune_taxa(taxa = taxa_sums(.) > 0)
-
-
-
-##########
-
-# can use this to look at differences between the 2 vaccinations and the mocks
-A_comp3 <-
-  ps %>%
-  subset_samples(ps@sam_data$day_post_challenge == -1) %>%
-  prune_taxa(taxa = taxa_sums(.) > 0)
 
