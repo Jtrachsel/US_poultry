@@ -211,15 +211,7 @@ A_comp1 <-
 
 
 
-# tst <- A_comp1 %>% NMDS_from_phyloseq('Vaccine')
-#
-# tst[[1]] %>%
-#   ggplot(aes(x=MDS1, y=MDS2, fill=Vaccine)) +
-#   geom_point(shape=21, color='white', size=4) +
-#   geom_segment(aes(xend=centroidX, yend=centroidY, color=Vaccine), alpha=.5)+
-#   theme_bw()
-#
-#
+
 
 
 
