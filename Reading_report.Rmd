@@ -1,0 +1,178 @@
+---
+title: "Sal Reading 16S rRNA amplicons"
+author: "Julian Trachsel"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Outline  
+  
+1. Mock Reading vs Mock Mock  
+2. Mreading vs BBS866
+3. Mreading vs AVIPRO  
+
+## Mock Reading vs Mock Mock {.tabset}  
+  
+> E. Reading Challenge effect on turkey microbiome
+Samples: Mock-vaccinated/mock-challenged and mock-vaccinated/Reading-challenged @ 2,7, 14, 21 dpi
+Question: did challenge with Salmonella Reading alter the microbial composition of the turkey cecum (cecal contents)  
+  
+  
+  
+### Summary  
+  
+It is difficult to generate a robust answer to this question with the current data.    
+  
+Hard to say what the 'challenge' effect is with this subset.  Before challenge both groups are already quite different from each other.  Furthermore, over the course of the challenge both groups change quite a bit, not just the Reading infected group.  
+  
+- mock mock changes a lot
+- mock Reading changes a lot
+- Both rooms start out quite different from each other.  
+  
+
+
+  
+### Questions  
+
+
+Comparison #1 @ 2dpi:  
+12 Mock-vaccinated/mock-challenged turkeys:        MM_D2 #1-12
+VERSUS
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D2 #1-12
+
+Comparison #2 @ 7dpi:
+12 Mock-vaccinated/mock-challenged turkeys:        MM_D7 #1-12
+VERSUS
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D7 #1-12
+
+Comparison #3 @ 14dpi:
+12 Mock-vaccinated/mock-challenged turkeys:        MM_D14 #1-12
+VERSUS
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D14 #1-12
+
+Comparison #4 @ 21dpi:
+16 Mock-vaccinated/mock-challenged turkeys:        MM_D21 #1-16
+VERSUS
+16 mock-vaccinated/Reading-challenged turkeys:    Mreading_D21 #1-16
+
+### Results  
+
+```{r}
+
+
+```
+
+
+
+## Mreading vs BBS866 {.tabset}  
+  
+>  F. BBS 866 vaccination effect on Reading-challenged turkey microbiome
+# Samples: Mock-vaccinated/Reading-challenged and BBS866-vaccinated/Reading-challenged
+# Question: Did BBS 866 vaccination modify the Reading-induced alterations of the microbial composition of the turkey cecum (cecal contents)
+  
+  
+  
+### Summary  
+  
+
+  
+
+
+  
+### Questions  
+
+
+Comparison #1 @ 2dpi:
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D2 #1-12
+VERSUS
+12 BBS866-vaccinated/Reading-challenged turkeys:    BBS866_OO_D2 #1-12
+
+Comparison #2 @ 7dpi:
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D7 #1-12
+VERSUS
+12 BBS866-vaccinated/Reading-challenged turkeys:    BBS866_OO_D7 #1-12
+
+Comparison #3 @ 14dpi:
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D14 #1-12
+VERSUS
+12 BBS866-vaccinated/Reading-challenged turkeys:    BBS866_OO_D14 #1-12
+
+Comparison #4 @ 21dpi:
+16 mock-vaccinated/Reading-challenged turkeys:    Mreading_D21 #1-16
+VERSUS
+16 BBS866-vaccinated/Reading-challenged turkeys:    BBS866_OO_D21 #1-16
+
+### Results  
+
+```{r}
+
+
+```
+
+
+## Mreading vs AVIPRO {.tabset}  
+  
+>  G. AviPro vaccination effect on Reading-challenged turkey microbiome
+Samples: Mock-vaccinated/Reading-challenged and AviPro-vaccinated/Reading-challenged
+Question: Did AviPro vaccination modify the Reading-induced alterations of the microbial composition of the turkey cecum (cecal contents)
+
+  
+  
+  
+### Summary  
+  
+
+  
+
+
+  
+### Questions  
+
+
+Comparison #1 @ 2dpi:
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D2 #1-12
+VERSUS
+12 AviPro -vaccinated/Reading-challenged turkeys:    Avipro_OO_D2 #1-12
+
+Comparison #2 @ 7dpi:
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D7 #1-12
+VERSUS
+12 AviPro -vaccinated/Reading-challenged turkeys:    Avipro_OO_D7 #1-12
+
+Comparison #3 @ 14dpi:
+12 mock-vaccinated/Reading-challenged turkeys:    Mreading_D14 #1-12
+VERSUS
+12 AviPro -vaccinated/Reading-challenged turkeys:    Avipro_OO_D14 #1-12
+
+Comparison #4 @ 21dpi:
+16 mock-vaccinated/Reading-challenged turkeys:    Mreading_D21 #1-16
+VERSUS
+13 AviPro -vaccinated/Reading-challenged turkeys:    Avipro_OO_D21 #1-13
+
+
+
+### Results  
+
+```{r}
+
+
+```
+
+
+
+
+
+### OTHER
+***I don’t plan to necessarily compare the vaccines to one another, but instead create 2 manuscripts (if all the data allow). Although, it might be interesting to know, if both vaccines alter the microbiota, do they do it similarly; i.e.:
+  1. Compare in A: comparison #1 & #2
+2. Compare F to G on the corresponding dpi
+
+  

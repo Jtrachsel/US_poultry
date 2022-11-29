@@ -1,23 +1,10 @@
-library(funfuns)
 library(tidyverse)
 library(phyloseq)
 library(cowplot)
 library(DESeq2)
 library(ANCOMBC)
+library(funfuns)
 
-
-
-
-
-
-#function to :
-# 1) subset phyloseq object
-# 2) make ordination (NMDS)
-# 3) PERMANOVAs
-# 4) calc diffabund OTUs
-#  a) DESeq2
-#  b) ANCOM-BC
-# 5) calc diffs in alpha diversity
 
 DESeq_single_contrast <-
   function(DESeq_obj,
@@ -71,6 +58,18 @@ make_difabund_plot <- function(diffabund_res, variable){
     geom_point(size=2.5, shape=21) +
     geom_vline(xintercept = 0)
 }
+
+
+#function to :
+# 1) subset phyloseq object
+# 2) make ordination (NMDS)
+# 3) PERMANOVAs
+# 4) calc diffabund OTUs
+#  a) DESeq2
+#  b) ANCOM-BC
+# 5) calc diffs in alpha diversity
+
+
 
 explore <- function(ps, variable){
   # TODO
