@@ -39,7 +39,7 @@ print('')
 3. Mreading vs AVIPRO  
 4. All groups together  
 
-All Code at ![https://github.com/Jtrachsel/US_poultry](https://github.com/Jtrachsel/US_poultry)  
+All Code at https://github.com/Jtrachsel/US_poultry  
   
   
 ## Overall Summary  
