@@ -9,15 +9,67 @@ output:
     toc_float: true
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, cache=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+
+library(knitr)
+library(kableExtra)
+library(tidyverse)
+
+
+#![unchanged image](foo.jpg)
+#![much-smaller image](foo.jpg){#id .class width=30 height=20px}
+#![half-size image](foo.jpg){#id .class width=50% height=50%}
+
+
+
+```
+
+```{r, echo=FALSE, include=FALSE, cache=TRUE}
+source('./scripts/reading_explore.R')
+print('')
 ```
 
 ## Outline  
-  
+
+0. Overall Summary    
 1. Mock Reading vs Mock Mock  
 2. Mreading vs BBS866
 3. Mreading vs AVIPRO  
+4. All groups together  
+
+All Code at ![https://github.com/Jtrachsel/US_poultry](https://github.com/Jtrachsel/US_poultry)  
+  
+  
+## Overall Summary  
+
+A strong 'room-effect' seems to be present in these data.  That is, the birds in each room are much more similar to each-other than they are to birds in other rooms, even prior to being treated differently.  This room-effect may be due to the extended period of isolation each room was subjected to, as required to prevent contamination from the live-attenuated vaccines spreading between treatment groups.  Because each treatment group was represented in only one room, it is difficult to differentiate between room effect and treatment effect.  
+Currently we have been looking at large trends in overall sample similarity instead of getting too far into the weeds of individual ASVs and how they are differentally represented across groups and time.  
+
+Several different influence on the microbiota are likely at play:
+  
+1. **Time effect**  
+  - Maturation of gut communities  
+  - common themes of gut community maturation probably playing out between groups.  
+  
+2. **Vaccine effect**  
+  - Evidence from the literature as well as the infantis portion of the experiment indicates that live attenuated vaccines may be associated with alterations in the microbiota.  
+  
+3. **Salmonella effect**  
+  - Salmonella is known to disrupt the microbiome and induce conditions that favor disfavor fermentative-specialists  
+  - There are some indications that the vaccinated groups may have exhibited less disturbance than the mock-vaccinated group.  
+    - Alpha Diversity not reduced in the acute phase.  
+    - Vaccinated groups exhibited lower overall change in the microbiome relative to the mock-vaccinated groups  
+  - SPECULATIVE - Certain taxa may be affected by Salmonella infection.  
+    - LRT tests: reduced after salmonella infection but not in vaccinated groups.    
+    - Oscillospiraceae  
+    - Lachnospiraceae  
+    - Ruminococcaceae  
+    
+    
+  
+  
 
 ## Mock Reading vs Mock Mock {.tabset}  
   
@@ -65,11 +117,34 @@ VERSUS
 
 ### Results  
 
-```{r}
+#### NMDS -- overall community similarities
 
+![](Reading_figures/01_E_NMDS.jpeg)  
+
+
+#### ASVs of interest  
+
+- To try and identify ASVs that we may be interested in I employed some likelihood ratio tests on ASV abundance.  
+
+- For LRT tests, you set up 2 models for ASV abundance, a 'full model' and a 'reduced model'  
+- If the full model for a ASV does a better job at describing the ASV abundance than the reduced model, then that ASV gets a low P value.  
+- Once ASVs have been identified in this manner, then we can cluster them by similar abundance patterns.  
+
+
+Models used:  
+- Full:    ~ Room + day_post_challenge + Room:day_post_challenge  
+- Reduced: ~ Vaccine + day_post_challenge 
+
+ASVs with low P values in these LRT tests will be those that change differently over time between the two groups.  
+
+  
+![](Reading_figures/02_E_LRT_OTUs.jpeg)  
+
+```{r, echo=FALSE} 
+E_LRT_ASVs %>% kable() %>% 
+  kableExtra::kable_styling(bootstrap_options = 'striped')
 
 ```
-
 
 
 ## Mreading vs BBS866 {.tabset}  
@@ -83,9 +158,10 @@ VERSUS
 ### Summary  
   
 
+Because it is difficult to pin down a "Salmonella effect" in this data, this question is also difficult to answer.  We observe different community structures between these two rooms and both rooms change over time.  
+
   
-
-
+  
   
 ### Questions  
 
@@ -112,11 +188,35 @@ VERSUS
 
 ### Results  
 
-```{r}
 
+#### NMDS -- overall community similarities
+
+![](Reading_figures/03_F_NMDS.jpeg)  
+
+  
+#### ASVs of interest  
+
+- To try and identify ASVs that we may be interested in I employed some likelihood ratio tests on ASV abundance.  
+
+- For LRT tests, you set up 2 models for ASV abundance, a 'full model' and a 'reduced model'  
+- If the full model for a ASV does a better job at describing the ASV abundance than the reduced model, then that ASV gets a low P value.  
+- Once ASVs have been identified in this manner, then we can cluster them by similar abundance patterns.  
+
+
+Models used:  
+- Full:    ~ Room + day_post_challenge + Room:day_post_challenge  
+- Reduced: ~ Vaccine + day_post_challenge 
+
+ASVs with low P values in these LRT tests will be those that change differently over time between the two groups.  
+
+  
+![](Reading_figures/04_F_LRT_OTUs.jpeg)  
+
+```{r, echo=FALSE} 
+F_LRT_ASVs %>% kable()%>% 
+  kableExtra::kable_styling(bootstrap_options = 'striped')
 
 ```
-
 
 ## Mreading vs AVIPRO {.tabset}  
   
@@ -129,7 +229,7 @@ Question: Did AviPro vaccination modify the Reading-induced alterations of the m
   
 ### Summary  
   
-
+Because it is difficult to pin down a "Salmonella effect" in this data, this question is also difficult to answer.  We observe different community structures between these two rooms and both rooms change over time.  
   
 
 
@@ -160,19 +260,129 @@ VERSUS
 
 
 ### Results  
+  
+#### NMDS -- overall community similarities
 
-```{r}
+![](Reading_figures/05_G_NMDS.jpeg)
+  
+#### ASVs of interest  
 
+- To try and identify ASVs that we may be interested in I employed some likelihood ratio tests on ASV abundance.  
+
+- For LRT tests, you set up 2 models for ASV abundance, a 'full model' and a 'reduced model'  
+- If the full model for a ASV does a better job at describing the ASV abundance than the reduced model, then that ASV gets a low P value.  
+- Once ASVs have been identified in this manner, then we can cluster them by similar abundance patterns.  
+
+
+Models used:  
+- Full:    ~ Room + day_post_challenge + Room:day_post_challenge  
+- Reduced: ~ Vaccine + day_post_challenge 
+
+ASVs with low P values in these LRT tests will be those that change differently over time between the two groups.  
+
+  
+![](Reading_figures/06_G_LRT_OTUs.jpeg)     
+
+
+```{r, echo=FALSE} 
+G_LRT_ASVs %>% kable()%>% 
+  kableExtra::kable_styling(bootstrap_options = 'striped')
+
+```
+  
+  
+
+## All groups {.tabset}  
+
+
+
+### Summary  
+  
+Because each room appears to have a very distinct community composition, I thought it was useful to 'zoom out' and get a very broad overview of how all the groups compare to one another.  This is just to help us get a better idea of the large scale patterns in the data before we go rooting around in the weeds.  Hopefully this will also help us build the story and prioritize the most important comparisons.  
+
+### Results {.tabset} 
+
+#### Beta Diversity  
+
+
+![](Reading_figures/07_EFG_NMDS.jpeg)  
+
+##### PERMANOVA tests between groups at each day  
+
+![](Reading_figures/08_PERMANOVA_groups_at_each_day.jpeg)    
+  
+![](Reading_figures/09_within_group_changes_time.jpeg)  
+  
+![](Reading_figures/10_cumulative_change_within_room.jpeg)  
+
+![](Reading_figures/12_PERMANOVA_vs_MOCK_Reading.jpeg)  
+
+
+
+
+![](Reading_figures/13_PERMANOVA_vs_MOCK_MOCK.jpeg)  
+
+
+##### Within room PERMANOVA tests in table format  
+
+```{r, echo=FALSE} 
+
+PERMANOVA_WITHIN_ROOM %>% kable()%>% 
+  kableExtra::kable_styling(bootstrap_options = 'striped')
+
+```
+  
+##### Within day PERMANOVA tests in table format  
+
+
+```{r, echo=FALSE} 
+
+PERMANOVA_WITHIN_DAY %>% kable()%>% 
+  kableExtra::kable_styling(bootstrap_options = 'striped')
 
 ```
 
 
 
+  
+#### Alpha Diversity  
+
+![](Reading_figures/11_alpha_div.jpeg)  
+  
+```{r, echo=FALSE} 
+
+alpha_contrasts_table %>% kable() %>% 
+  kableExtra::kable_styling(bootstrap_options = 'striped')
+
+```
+  
+#### taxa down in Mock_Reading  
+
+- From the LRT tests before, some interesting patterns.  
+- The following taxa are reduced over time in the Mock_Reading group vs the 3 other groups  
+- Maybe these taxa are sensitive to Salmonella disturbance?  Vaccines help prevent their depletion?  
+- beware -- highly speculative  
 
 
-### OTHER
-***I don’t plan to necessarily compare the vaccines to one another, but instead create 2 manuscripts (if all the data allow). Although, it might be interesting to know, if both vaccines alter the microbiota, do they do it similarly; i.e.:
-  1. Compare in A: comparison #1 & #2
-2. Compare F to G on the corresponding dpi
+```{r}
 
+
+bind_rows(E_LRT_ASVs %>% mutate(comp='E'),
+          F_LRT_ASVs%>% mutate(comp='F'),
+          G_LRT_ASVs%>% mutate(comp='G')) %>% 
+  group_by(family) %>% tally() %>% 
+  arrange(desc(n)) %>% 
+  kable() %>% 
+  kableExtra::kable_styling(bootstrap_options = 'striped')  
+
+
+
+bind_rows(E_LRT_ASVs %>% mutate(comp='E'),
+          F_LRT_ASVs%>% mutate(comp='F'),
+          G_LRT_ASVs%>% mutate(comp='G')) %>% 
+  kable() %>% 
+  kableExtra::kable_styling(bootstrap_options = 'striped')
+
+```
+  
   
